@@ -10,7 +10,7 @@ service cloud.firestore {
     function me() { return request.auth.uid; }
     function myEmail() { return request.auth.token.email.lower(); }
     // Invites are matched by email, so only a verified address may claim one.
-    function myVerifiedEmail() { return request.auth.token.email_verified == true ? myEmail() : null; }
+    function isMyVerifiedEmail(email) { return request.auth.token.email_verified == true && email == myEmail(); }
 
     function workspace(wid) { return get(/databases/$(database)/documents/workspaces/$(wid)).data; }
     function workspaceRole(wid) { return workspace(wid).roles.get(me(), null); }
@@ -28,7 +28,7 @@ service cloud.firestore {
       let invite = get(/databases/$(database)/documents/invites/$(token)).data;
       return invite.targetId == targetId
         && invite.status == 'pending'
-        && invite.email == myVerifiedEmail()
+        && isMyVerifiedEmail(invite.email)
         && changedOnly(['memberIds', 'roles', 'members', 'joinedVia'])
         && request.resource.data.memberIds.toSet() == resource.data.memberIds.toSet().union([me()].toSet())
         && request.resource.data.roles.diff(resource.data.roles).affectedKeys().hasOnly([me()])
@@ -113,7 +113,7 @@ service cloud.firestore {
         && ownsInviteTarget(request.resource.data);
       allow update: if signedIn() && (
         ownsInviteTarget(resource.data)
-        || (resource.data.email == myVerifiedEmail()
+        || (isMyVerifiedEmail(resource.data.email)
             && resource.data.status == 'pending'
             && request.resource.data.status == 'accepted'
             && request.resource.data.acceptedBy == me()
