@@ -15,22 +15,20 @@ interface AuthShellProps {
   aside?: ReactNode;
   asideFirst?: boolean;
   footer?: ReactNode;
-  /** Send signed-in visitors on to the app. Off for pages that must work while signed in. */
-  redirectSignedIn?: boolean;
 }
 
 /** Shared frame for the auth pages; sends already signed-in visitors on to the app. */
-export function AuthShell({ children, aside, asideFirst, footer, redirectSignedIn = true }: AuthShellProps) {
+export function AuthShell({ children, aside, asideFirst, footer }: AuthShellProps) {
   const { user, loading } = useAuth();
   const router = useRouter();
 
   useEffect(() => {
-    if (redirectSignedIn && !loading && user) {
+    if (!loading && user) {
       // Honour ?next= from a protected page, but only for same-site paths.
       const next = new URLSearchParams(window.location.search).get("next");
       router.replace(next && next.startsWith("/") && !next.startsWith("//") ? next : postAuthPath());
     }
-  }, [redirectSignedIn, loading, user, router]);
+  }, [loading, user, router]);
 
   return (
     <div className={cn("flex min-h-dvh", asideFirst && "flex-row-reverse")}>

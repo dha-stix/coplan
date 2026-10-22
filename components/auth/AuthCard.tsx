@@ -52,17 +52,3 @@ export function SuccessAnimation() {
     </svg>
   );
 }
-
-/** Padlock with a key turning — shown while choosing a new password. */
-export function LockAnimation() {
-  return (
-    <svg className="cp-float" width="120" height="110" viewBox="0 0 120 110" role="img" aria-label="Padlock">
-      <circle cx="60" cy="60" r="46" fill="#EEF0FF" />
-      <path d="M44 52V40a16 16 0 0 1 32 0v12" fill="none" stroke="#4338CA" strokeWidth="5" strokeLinecap="round" />
-      <rect x="34" y="50" width="52" height="40" rx="10" fill="#4338CA" />
-      <circle cx="60" cy="68" r="5" fill="#D4F75B" />
-      <path d="M60 72v8" stroke="#D4F75B" strokeWidth="4" strokeLinecap="round" />
-      <circle className="cp-ripple" cx="60" cy="70" r="30" fill="none" stroke="#4338CA" strokeOpacity="0.35" strokeWidth="2" />
-    </svg>
-  );
-}

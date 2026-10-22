@@ -18,8 +18,7 @@ Coplan is hosted on Vercel's free Hobby plan; Firebase (Auth + Firestore) stays 
 
 1. Import the GitHub repo in Vercel (framework: Next.js, no build settings to change).
 2. Add every `NEXT_PUBLIC_*` value from `.env.local` under **Settings → Environment Variables** (Production, Preview and Development). `NEXT_PUBLIC_SITE_URL` is optional on Vercel — the production domain is used automatically.
-3. In Firebase **Authentication → Settings → Authorized domains**, add your Vercel domain (e.g. `coplan.vercel.app`) so Google sign-in works there.
-4. Point the password-reset **action URL** (see below) at `https://<your-domain>/auth/action`.
+3. In Firebase **Authentication → Settings → Authorized domains**, add your Vercel domain (e.g. `coplan.vercel.app`) so Google sign-in works there and reset emails can link back to the site.
 
 Every push to `main` deploys to production; other branches get preview URLs. Firestore rules and indexes are deployed separately with `npx firebase-tools deploy --only firestore`.
 
@@ -37,12 +36,7 @@ Every push to `main` deploys to production; other branches get preview URLs. Fir
 
    The indexes cover the notification feed and the cross-project "Assigned to me" query. If Firestore ever asks for another index, the error message contains a one-click link to create it.
 
-4. **Branded password reset page.** Coplan has its own page for choosing a new password at `/auth/action`. To make Firebase's reset emails open it:
-   - **Authentication → Templates → Password reset →** click the pencil icon → **Customize action URL**.
-   - Enter `https://your-domain.com/auth/action` (for local testing: `http://localhost:3000/auth/action`) and save.
-   - The domain must be listed under **Authentication → Settings → Authorized domains**.
-
-   This one URL is used by all of Firebase's email links. The page also handles email verification and email-change recovery links.
+4. **Password reset and email verification** use Firebase's built-in emails and hosted pages — no action URL to configure. You can edit the wording and sender name under **Authentication → Templates**.
 
 ## Share previews (social media)
 

@@ -4,11 +4,8 @@
  * these helpers only shape the data the rules expect.
  */
 import {
-  applyActionCode,
   browserLocalPersistence,
   browserSessionPersistence,
-  checkActionCode,
-  confirmPasswordReset,
   createUserWithEmailAndPassword,
   sendEmailVerification,
   sendPasswordResetEmail,
@@ -17,7 +14,6 @@ import {
   signInWithPopup,
   signOut,
   updateProfile,
-  verifyPasswordResetCode,
   type User,
 } from "firebase/auth";
 import {
@@ -126,7 +122,7 @@ export async function registerWithEmail({ name, email, password }: { name: strin
 }
 
 export async function sendVerificationEmail(user: User) {
-  await sendEmailVerification(user, { url: `${window.location.origin}/dashboard` });
+  await withContinueUrl("/dashboard", (settings) => sendEmailVerification(user, settings));
 }
 
 /** Re-reads the account after the user clicks the verification link; returns whether it's verified now. */
@@ -143,41 +139,23 @@ export async function loginWithEmail({ email, password, remember }: { email: str
   return user;
 }
 
-export async function resetPassword(email: string) {
-  await sendPasswordResetEmail(auth(), email.trim(), { url: `${window.location.origin}/auth/login` });
-}
-
-/* Email action links. With the custom action URL set in Firebase (see README), every link
-   Firebase emails opens /auth/action?mode=...&oobCode=... in Coplan instead of Firebase's page. */
-
-/** Checks a reset link is still valid and returns the account's email. */
-export async function checkPasswordResetLink(code: string) {
-  return verifyPasswordResetCode(auth(), code);
-}
-
-/** Sets the new password, then tries to sign the user straight in. Returns whether that worked. */
-export async function completePasswordReset(code: string, email: string, newPassword: string) {
-  await confirmPasswordReset(auth(), code, newPassword);
+/**
+ * Firebase emails link to its own hosted page; the "continue" button there returns to `path`.
+ * That return link only works on domains listed under Authentication → Authorized domains,
+ * so if this site isn't listed yet the email is sent without it rather than failing.
+ */
+async function withContinueUrl(path: string, send: (settings?: { url: string }) => Promise<void>) {
   try {
-    const { user } = await signInWithEmailAndPassword(auth(), email, newPassword);
-    await ensureUserProfile(user);
-    return true;
-  } catch {
-    // The password is already changed; they can simply log in.
-    return false;
+    await send({ url: `${window.location.origin}${path}` });
+  } catch (error) {
+    const code = (error as { code?: string }).code;
+    if (code !== "auth/unauthorized-continue-uri" && code !== "auth/invalid-continue-uri") throw error;
+    await send();
   }
 }
 
-/** Confirms an email-verification link. */
-export async function verifyEmailLink(code: string) {
-  await applyActionCode(auth(), code);
-}
-
-/** Undoes an email-address change and returns the restored address. */
-export async function recoverEmailLink(code: string) {
-  const info = await checkActionCode(auth(), code);
-  await applyActionCode(auth(), code);
-  return info.data.email ?? "";
+export async function resetPassword(email: string) {
+  await withContinueUrl("/auth/login", (settings) => sendPasswordResetEmail(auth(), email.trim(), settings));
 }
 
 export async function logout() {
@@ -200,8 +178,6 @@ const AUTH_ERRORS: Record<string, string> = {
   "auth/popup-closed-by-user": "The Google sign-in window was closed before finishing.",
   "auth/popup-blocked": "Your browser blocked the Google sign-in window. Please allow pop-ups and try again.",
   "auth/network-request-failed": "Network error. Check your connection and try again.",
-  "auth/expired-action-code": "This link has expired. Request a new one below.",
-  "auth/invalid-action-code": "This link is invalid or has already been used. Request a new one below.",
   "auth/user-disabled": "This account has been disabled. Contact your workspace owner.",
 };
 
