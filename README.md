@@ -12,6 +12,17 @@ npm run dev
 
 The marketing pages work without any keys. Sign-in and the app need Firebase.
 
+## Deploy (Vercel)
+
+Coplan is hosted on Vercel's free Hobby plan; Firebase (Auth + Firestore) stays on the free Spark plan.
+
+1. Import the GitHub repo in Vercel (framework: Next.js, no build settings to change).
+2. Add every `NEXT_PUBLIC_*` value from `.env.local` under **Settings → Environment Variables** (Production, Preview and Development). `NEXT_PUBLIC_SITE_URL` is optional on Vercel — the production domain is used automatically.
+3. In Firebase **Authentication → Settings → Authorized domains**, add your Vercel domain (e.g. `coplan.vercel.app`) so Google sign-in works there.
+4. Point the password-reset **action URL** (see below) at `https://<your-domain>/auth/action`.
+
+Every push to `main` deploys to production; other branches get preview URLs. Firestore rules and indexes are deployed separately with `npx firebase-tools deploy --only firestore`.
+
 ## Connect Firebase
 
 1. Create a Firebase project and add a **Web app**. Copy its config values into `.env.local` (`NEXT_PUBLIC_FIREBASE_*`).
