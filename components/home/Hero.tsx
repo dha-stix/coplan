@@ -55,7 +55,7 @@ export function Hero() {
               </span>
             ))}
           </div>
-          Free for small teams · No credit card needed
+          100% free · No credit card needed
         </motion.div>
       </motion.div>
 

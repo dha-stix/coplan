@@ -95,7 +95,7 @@ export function RegisterPanel() {
           ))}
         </ul>
       </div>
-      <span className="text-[13px] text-brand-tint">Free for small teams · No credit card</span>
+      <span className="text-[13px] text-brand-tint">100% free · No credit card</span>
     </div>
   );
 }

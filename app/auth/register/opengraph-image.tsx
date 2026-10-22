@@ -6,7 +6,7 @@ export const contentType = OG_CONTENT_TYPE;
 
 export default function Image() {
   return renderOgImage({
-    eyebrow: "Free for small teams",
+    eyebrow: "100% free",
     title: "Bring your team",
     highlight: "onto one board.",
     subtitle: "Create a workspace in seconds and invite teammates by email.",

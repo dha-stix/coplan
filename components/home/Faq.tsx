@@ -7,7 +7,7 @@ import { Reveal } from "@/components/ui/Reveal";
 import { cn } from "@/lib/utils";
 
 const FAQS = [
-  { q: "Is Coplan free?", a: "Coplan is free for small teams. [YOUR PRICING DETAILS]" },
+  { q: "Is Coplan free?", a: "Yes — Coplan is completely free. Create unlimited workspaces and projects and invite your whole team at no cost." },
   {
     q: "How do invites work?",
     a: "Project owners enter teammates’ emails. Coplan emails an invite link; when they sign in they land straight in the project or workspace.",
