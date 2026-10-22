@@ -1,0 +1,60 @@
+@import "tailwindcss";
+@import "../styles/animations.css";
+
+@theme {
+  --color-ink: #0e1020;
+  --color-ink-2: #3a3f55;
+  --color-muted: #555b70;
+  --color-faint: #9ba0b4;
+  --color-line: #e3e5ee;
+  --color-line-2: #d5d8e4;
+  --color-canvas: #f6f7fb;
+  --color-soft: #f1f2f7;
+  --color-brand: #4338ca;
+  --color-brand-600: #3730a3;
+  --color-brand-soft: #eef0ff;
+  --color-brand-tint: #dcddfb;
+  --color-lime: #d4f75b;
+  --color-night: #0e1020;
+  --color-night-2: #1b1e33;
+  --color-night-3: #2a2e48;
+  --color-night-text: #b9bccb;
+  --color-teal: #0f766e;
+  --color-danger: #b91c1c;
+  --color-alert: #e11d48;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), var(--font-inter), sans-serif;
+
+  --shadow-card: 0 1px 2px rgba(14, 16, 32, 0.04);
+  --shadow-float: 0 30px 80px rgba(14, 16, 32, 0.12);
+  --shadow-pop: 0 24px 60px rgba(14, 16, 32, 0.18);
+}
+
+@layer base {
+  html { scroll-behavior: smooth; }
+  body {
+    @apply bg-canvas text-ink font-sans antialiased;
+  }
+  h1, h2, h3 { text-wrap: balance; }
+  :focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
+  ::selection { background: var(--color-brand-tint); }
+}
+
+@layer components {
+  .eyebrow {
+    @apply text-[13px] font-semibold uppercase tracking-[0.08em] text-brand;
+  }
+  .section-title {
+    @apply font-display font-bold tracking-[-0.03em] leading-[1.05] text-[clamp(32px,4.2vw,52px)];
+  }
+  .card {
+    @apply rounded-3xl border border-line bg-white;
+  }
+  .input-shell {
+    @apply flex min-h-12 items-center gap-2.5 rounded-xl border border-line-2 bg-white px-3.5 transition focus-within:border-brand focus-within:shadow-[0_0_0_4px_var(--color-brand-soft)];
+  }
+  .input-bare {
+    @apply min-w-0 flex-1 border-0 bg-transparent text-[15px] text-ink outline-none placeholder:text-faint;
+  }
+}

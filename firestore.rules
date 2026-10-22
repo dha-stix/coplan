@@ -1,0 +1,125 @@
+rules_version = '2';
+
+// Coplan security rules.
+// Workspaces and projects each keep `memberIds` + a `roles` map ({ uid: "owner" | "member" | "viewer" }).
+// A project member's role comes from the project first, then falls back to their workspace role.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() { return request.auth != null; }
+    function me() { return request.auth.uid; }
+    function myEmail() { return request.auth.token.email.lower(); }
+    // Invites are matched by email, so only a verified address may claim one.
+    function myVerifiedEmail() { return request.auth.token.email_verified == true ? myEmail() : null; }
+
+    function workspace(wid) { return get(/databases/$(database)/documents/workspaces/$(wid)).data; }
+    function workspaceRole(wid) { return workspace(wid).roles.get(me(), null); }
+    function projectDoc(pid) { return get(/databases/$(database)/documents/projects/$(pid)).data; }
+    function projectRole(p) { return p.roles.get(me(), workspaceRole(p.workspaceId)); }
+    function canWrite(role) { return role in ['owner', 'member']; }
+
+    function changedOnly(keys) {
+      return request.resource.data.diff(resource.data).affectedKeys().hasOnly(keys);
+    }
+
+    // Someone accepting an invite may add exactly themselves, with exactly the invited role.
+    function isSelfJoin(targetId) {
+      let token = request.resource.data.joinedVia;
+      let invite = get(/databases/$(database)/documents/invites/$(token)).data;
+      return invite.targetId == targetId
+        && invite.status == 'pending'
+        && invite.email == myVerifiedEmail()
+        && changedOnly(['memberIds', 'roles', 'members', 'joinedVia'])
+        && request.resource.data.memberIds.toSet() == resource.data.memberIds.toSet().union([me()].toSet())
+        && request.resource.data.roles.diff(resource.data.roles).affectedKeys().hasOnly([me()])
+        && request.resource.data.members.diff(resource.data.members).affectedKeys().hasOnly([me()])
+        && request.resource.data.roles[me()] == invite.role;
+    }
+
+    function isNewOwnedEntity() {
+      let d = request.resource.data;
+      return d.ownerId == me() && d.memberIds == [me()] && d.roles.keys().hasOnly([me()]) && d.roles[me()] == 'owner';
+    }
+
+    match /users/{userId} {
+      allow read: if signedIn();
+      allow create, update: if signedIn() && me() == userId;
+    }
+
+    match /workspaces/{wid} {
+      allow read: if signedIn() && me() in resource.data.memberIds;
+      allow create: if signedIn() && isNewOwnedEntity();
+      allow update: if signedIn() && (resource.data.roles.get(me(), null) == 'owner' || isSelfJoin(wid));
+      allow delete: if signedIn() && resource.data.roles.get(me(), null) == 'owner';
+    }
+
+    match /projects/{pid} {
+      // Written in terms of the fields the app's list queries filter on (memberIds for
+      // "shared with me", workspaceId for "projects in this workspace"), because Firestore
+      // rejects a query unless its filters alone prove this rule.
+      allow read: if signedIn() && (me() in resource.data.memberIds || workspaceRole(resource.data.workspaceId) != null);
+      allow create: if signedIn() && isNewOwnedEntity() && canWrite(workspaceRole(request.resource.data.workspaceId));
+      allow update: if signedIn() && (
+        projectRole(resource.data) == 'owner'
+        || (projectRole(resource.data) == 'member' && changedOnly(['taskCount', 'doneCount', 'columns', 'updatedAt']))
+        // Viewers' comments never touch the project, so they need no update rights here.
+        || isSelfJoin(pid)
+      );
+      allow delete: if signedIn() && projectRole(resource.data) == 'owner';
+
+      match /tasks/{tid} {
+        allow read: if signedIn() && projectRole(projectDoc(pid)) != null;
+        allow create, delete: if signedIn() && canWrite(projectRole(projectDoc(pid)));
+        allow update: if signedIn() && (
+          canWrite(projectRole(projectDoc(pid)))
+          || (projectRole(projectDoc(pid)) == 'viewer' && changedOnly(['commentCount']))
+        );
+
+        match /comments/{cid} {
+          allow read: if signedIn() && projectRole(projectDoc(pid)) != null;
+          allow create: if signedIn() && projectRole(projectDoc(pid)) != null && request.resource.data.authorId == me();
+          // Authors delete their own comments; owners and members can clear them when deleting a task or project.
+          allow delete: if signedIn() && (resource.data.authorId == me() || canWrite(projectRole(projectDoc(pid))));
+        }
+      }
+    }
+
+    // "Assigned to me" reads tasks across all projects with a collection-group query.
+    match /{path=**}/tasks/{tid} {
+      allow read: if signedIn() && me() in resource.data.assigneeIds;
+    }
+
+    match /notifications/{nid} {
+      allow read, delete: if signedIn() && resource.data.userId == me();
+      allow create: if signedIn() && request.resource.data.actorId == me() && request.resource.data.read == false;
+      allow update: if signedIn() && resource.data.userId == me() && changedOnly(['read']);
+    }
+
+    function ownsInviteTarget(d) {
+      return d.scope == 'workspace'
+        ? workspaceRole(d.targetId) == 'owner'
+        : projectRole(projectDoc(d.targetId)) == 'owner';
+    }
+
+    // The invite id is the unguessable token emailed to the invitee, so any signed-in
+    // holder of the link may read that one document.
+    match /invites/{token} {
+      allow get: if signedIn();
+      allow list: if signedIn() && (resource.data.invitedBy == me() || ownsInviteTarget(resource.data));
+      allow create: if signedIn()
+        && request.resource.data.invitedBy == me()
+        && request.resource.data.status == 'pending'
+        && request.resource.data.role in ['member', 'viewer']
+        && ownsInviteTarget(request.resource.data);
+      allow update: if signedIn() && (
+        ownsInviteTarget(resource.data)
+        || (resource.data.email == myVerifiedEmail()
+            && resource.data.status == 'pending'
+            && request.resource.data.status == 'accepted'
+            && request.resource.data.acceptedBy == me()
+            && changedOnly(['status', 'acceptedBy']))
+      );
+      allow delete: if signedIn() && ownsInviteTarget(resource.data);
+    }
+  }
+}

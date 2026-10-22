@@ -1,0 +1,78 @@
+/* Reusable motion classes for SVG and UI animations.
+   SVG classes set transform-box so transforms pivot around the element itself. */
+
+.cp-float { animation: cpFloat 5s ease-in-out infinite; }
+.cp-float-slow { animation: cpFloat 6s ease-in-out 1s infinite; }
+.cp-pulse { animation: cpPulse 1.8s ease-out infinite; }
+.cp-ring { transform-box: fill-box; transform-origin: 50% 0; animation: cpRing 2.6s ease-in-out infinite; }
+.cp-flow { stroke-dasharray: 6 6; animation: cpFlow 1s linear infinite; }
+.cp-slide { animation: cpSlide 4.5s cubic-bezier(0.6, 0, 0.3, 1) infinite; }
+.cp-roam { animation: cpRoam 9s ease-in-out infinite; }
+.cp-typing { transform-box: fill-box; animation: cpTyping 1.2s ease-in-out infinite; }
+.cp-wave { animation: cpWave 2.6s ease-in-out infinite; }
+.cp-plane { animation: cpPlane 2.8s ease-in-out infinite; }
+.cp-stack { animation: cpStack 2.4s ease-in-out infinite; }
+.cp-ripple { transform-box: fill-box; transform-origin: center; animation: cpRipple 2s ease-out infinite; }
+.cp-bars { transform-box: fill-box; transform-origin: 50% 100%; animation: cpBars 1.8s ease-in-out infinite; }
+.cp-spin-slow { animation: cpSpin 40s linear infinite; }
+.cp-spin { transform-box: fill-box; transform-origin: center; animation: cpSpin 0.8s linear infinite; }
+.cp-nudge { animation: cpNudge 1.4s ease-in-out infinite; }
+.cp-bounce { animation: cpBounce 1s ease-in-out infinite; }
+.cp-blink { animation: cpBlink 1s steps(1) infinite; }
+.cp-land { animation: cpLand 6s cubic-bezier(0.3, 1.3, 0.5, 1) infinite both; }
+.cp-fly { animation: cpFly 3s ease-in-out infinite; }
+.cp-grow { transform-origin: left; animation: cpGrow 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.cp-fill { transform-origin: left; animation: cpGrow 1.2s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.cp-pop { transform-box: fill-box; transform-origin: center; animation: cpPop 0.5s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.cp-in { animation: cpIn 0.6s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+
+/* Draw a stroke once (--len = path length) or on a loop. */
+.cp-draw { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: cpDraw 0.7s ease-out forwards; }
+.cp-drawloop { stroke-dasharray: var(--len); stroke-dashoffset: var(--len); animation: cpDrawLoop 3.2s ease-out infinite; }
+
+.cp-lift { transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s, border-color 0.3s; }
+.cp-lift:hover { transform: translateY(-4px); box-shadow: 0 24px 48px -24px rgba(14, 16, 32, 0.3); }
+
+@keyframes cpFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+@keyframes cpPulse { 0% { box-shadow: 0 0 0 0 rgba(67, 56, 202, 0.45); } 100% { box-shadow: 0 0 0 12px rgba(67, 56, 202, 0); } }
+@keyframes cpRing { 0%, 55%, 100% { transform: rotate(0); } 5%, 15%, 25% { transform: rotate(16deg); } 10%, 20%, 30% { transform: rotate(-16deg); } }
+@keyframes cpFlow { to { stroke-dashoffset: -24; } }
+@keyframes cpSlide {
+  0%, 15% { transform: translate(0, 0) rotate(0); }
+  30% { transform: translate(20px, -8px) rotate(-3deg); }
+  55% { transform: translate(145px, -8px) rotate(-3deg); }
+  65%, 100% { transform: translate(145px, 0) rotate(0); }
+}
+@keyframes cpRoam { 0%, 100% { transform: translate(0, 0); } 30%, 55% { transform: translate(70px, 40px); } 80% { transform: translate(-40px, 90px); } }
+@keyframes cpTyping { 0%, 60%, 100% { transform: translateY(0); opacity: 0.4; } 30% { transform: translateY(-2px); opacity: 1; } }
+@keyframes cpWave { 0%, 100% { opacity: 0; } 30%, 60% { opacity: 1; } }
+@keyframes cpPlane {
+  0% { transform: translate(0, 0); opacity: 1; }
+  55% { transform: translate(10px, -10px); opacity: 0; }
+  56% { transform: translate(-8px, 8px); opacity: 0; }
+  100% { transform: translate(0, 0); opacity: 1; }
+}
+@keyframes cpStack { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+@keyframes cpRipple { 0% { transform: scale(0.6); opacity: 0.8; } 100% { transform: scale(1.5); opacity: 0; } }
+@keyframes cpBars { 0%, 100% { transform: scaleY(0.35); } 50% { transform: scaleY(1); } }
+@keyframes cpSpin { to { transform: rotate(360deg); } }
+@keyframes cpNudge { 0%, 100% { transform: translateX(0); } 50% { transform: translateX(4px); } }
+@keyframes cpBounce { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(3px); } }
+@keyframes cpBlink { 50% { opacity: 0; } }
+@keyframes cpLand { 0% { opacity: 0; transform: translateY(-28px); } 12%, 82% { opacity: 1; transform: translateY(0); } 100% { opacity: 0; transform: translateY(0); } }
+@keyframes cpFly {
+  0% { transform: translate(0, 0); opacity: 1; }
+  60% { transform: translate(26px, -22px); opacity: 0; }
+  61% { transform: translate(-18px, 14px); opacity: 0; }
+  100% { transform: translate(0, 0); opacity: 1; }
+}
+@keyframes cpGrow { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes cpPop { 0% { transform: scale(0.6); opacity: 0; } 60% { transform: scale(1.06); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes cpIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+@keyframes cpDraw { to { stroke-dashoffset: 0; } }
+@keyframes cpDrawLoop { 0% { stroke-dashoffset: var(--len); } 40%, 85% { stroke-dashoffset: 0; opacity: 1; } 100% { stroke-dashoffset: 0; opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; transition: none !important; }
+  .cp-draw, .cp-drawloop { stroke-dashoffset: 0 !important; }
+}
